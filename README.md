@@ -41,27 +41,22 @@ src/
 
 ### 2. Configure MySQL
 
-Create a database and update the `application.yml`:
+Create a database and update the `application.properties`:
 
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/leave_system
+    url: jdbc:mysql://localhost:3306/UserLeave
     username: root
-    password: yourpassword
+    password: 
 ```
 
 ### 3. Configure Keycloak
 
-In `application.yml` or `application.properties`:
+In `application.properties`:
 
 ```yaml
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8080/realms/myrealm
+spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8080/realms/myrealm
 ```
 
 Roles used:
