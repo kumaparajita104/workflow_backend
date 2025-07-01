@@ -1,104 +1,216 @@
 
-# Leave Management System - Backend (Spring Boot)
+Leave Management System - Backend (Spring Boot)
 
-This is the backend of a Role-Based Leave Management System built using **Spring Boot**. It supports dynamic form templates, state machine workflows, and role-based access for Admins, Employees, Managers, and HRs.
+This project is a Spring Boot-based REST API backend that supports dynamic form and workflow generation, form submission, role-based approval flow, and user management using **Keycloak** for authentication and authorization.
 
-## 🚀 Features
+##  Features
 
-- 🔐 JWT-based authentication (via Keycloak)
-- 📄 Dynamic form submission and retrieval
-- 🔄 Workflow state transitions with role validation
-- 🧠 Role-based endpoints for approval/rejection
-- 🛠 Admins can define workflows and form schemas
+-  JWT-based authentication using Keycloak
+-  Dynamic form templates and rendering
+-  Configurable workflows with state transitions
+-  Role-based access control for workflow approvals
+-  Form submission and workflow instance tracking
+-  Admin, Manager, HR role support
+-  CORS support for frontend integration
 
-## 🧰 Tech Stack
+---
+
+##  Technologies Used
 
 - Java 17+
-- Spring Boot 3.x
-- MySQL
-- Keycloak for authentication
-- Maven
+- Spring Boot
+- Spring Security (OAuth2 + Keycloak)
+- JPA (Hibernate)
+- PostgreSQL (or any JPA-compatible DB)
+- Jackson (for JSON parsing)
 
-## 📁 Project Structure
+---
+
+##  Setup Instructions
+
+### Prerequisites
+
+- Java 17+
+- Maven
+- PostgreSQL or MySQL running
+- Keycloak running with realm & client setup (e.g. `user_leave_api`)
+- Frontend (optional but recommended)
+
+### 1. Clone the Repository
 
 ```bash
-src/
-├── controller/         # REST controllers
-├── model/              # JPA entity models
-├── repository/         # Spring Data JPA repositories
-├── service/            # Business logic
-└── config/             # Security configuration
+git clone https://github.com/your-repo/user-leave-request-backend.git
+cd user-leave-request-backend
 ```
 
-## 🔧 Setup Instructions
+### 2. Configure `application.properties`
 
-### 1. Prerequisites
+Update `src/main/resources/application.properties` with:
 
-- Java 17+ installed
-- MySQL running locally
-- Keycloak instance (e.g., `http://localhost:8080`)
-- Maven
+```properties
+spring.datasource.url=dbc:mysql://localhost:3306/UserLeave?useSSL=false&serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=
+spring.jpa.hibernate.ddl-auto=update
 
-### 2. Configure MySQL
-
-Create a database and update the `application.properties`:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/UserLeave
-    username: root
-    password: 
-```
-
-### 3. Configure Keycloak
-
-In `application.properties`:
-
-```yaml
 spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8080/realms/myrealm
+spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8080/realms/myrealm/protocol/openid-connect/certs
 ```
 
-Roles used:
-
-- `client_admin`
-- `client_employee`
-- `client_manager`
-- `client_hr`
-
-### 4. Run the Application
+### 3. Build & Run
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-## 🔄 API Endpoints
+---
 
-### Admin
+##  Authentication
 
-- `POST /admin/forms` — Save form schema
-- `POST /admin/form-generate` — Get schema by form type
-- `POST /workflow/create` — Create workflow template
+This app uses Keycloak for identity and access management. All API requests require a bearer token obtained via the Keycloak login flow.
 
-### Employee
+---
 
-- `POST /forms/submit` — Submit leave request
+## 📁 Package Structure
 
-### Manager/HR
+```
+com.example.user_leave_request
+├── controller
+│   ├── AdminController.java
+│   ├── FormController.java
+│   ├── UserController.java
+│   └── WorkflowController.java
+├── dto
+├── model
+├── repository
+├── service
+```
 
-- `GET /workflow/pending/manager` — Pending approvals for manager
-- `GET /workflow/pending/hr` — Pending approvals for HR
-- `POST /workflow/transition/{nextState}` — Transition workflow (approve/reject)
+---
 
-### Common
+## 📡 REST API Endpoints
 
-- `GET /workflow/details/{workflowId}` — View form data for a workflow
+### 🔧 Admin APIs
 
-## 📌 Notes
+| Endpoint | Method | Description |
+|---------|--------|-------------|
+| `/admin/forms` | POST | Create new form template |
+| `/admin/workflows` | POST | Create new workflow template |
+| `/admin/form-generate` | POST | Generate form schema by formType |
 
-- JWT tokens must be sent in the `Authorization: Bearer <token>` header.
-- Role validation is enforced via `@AuthenticationPrincipal` and checked programmatically.
+###  Form APIs
 
-## 👩‍💻 Author
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/forms/submit` | POST | Submit filled form |
+| `/forms/{formType}` | GET | Get form template by type |
 
-Built by Aparajita Kumari using Spring Boot, MySQL, and Keycloak.
+### 👤 User APIs
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/user/me` | GET | Get current user info from JWT |
+
+###  Workflow APIs
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/workflow/transition` | POST | Transition workflow (generic) |
+| `/workflow/transition/MANAGER_APPROVED` | POST | Manager approval |
+| `/workflow/transition/HR_APPROVED` | POST | HR approval |
+| `/workflow/transition/REJECTED` | POST | Reject application |
+| `/workflow/transition/{formType}` | GET | Get transitions for workflow |
+| `/workflow/details/{workflowId}` | GET | View workflow instance details |
+| `/workflow/pending/manager` | GET | View manager-pending approvals |
+| `/workflow/pending/hr` | GET | View HR-pending approvals |
+
+---
+
+##  Roles
+
+Roles are managed in Keycloak. Common roles include:
+
+- `admin`
+- `user`
+- `manager`
+- `hr`
+
+These are extracted from both `realm_access.roles` and `resource_access.user_leave_api.roles`.
+
+---
+
+##  Sample Form Submission Request
+
+```json
+POST /forms/submit
+Authorization: Bearer <JWT>
+
+{
+  "formType": "leave-request",
+  "data": {
+    "fromDate": "2025-07-01",
+    "toDate": "2025-07-10",
+    "reason": "Vacation"
+  }
+}
+```
+
+---
+
+##  Sample Workflow Template Payload
+
+```json
+{
+  "formType": "leave-request",
+  "states": ["PENDING", "MANAGER_APPROVED", "HR_APPROVED", "REJECTED"],
+  "transitions": [
+    { "from": "PENDING", "to": "MANAGER_APPROVED", "allowedRoles": ["manager"] },
+    { "from": "MANAGER_APPROVED", "to": "HR_APPROVED", "allowedRoles": ["hr"] },
+    { "from": "PENDING", "to": "REJECTED", "allowedRoles": ["manager", "hr"] }
+  ]
+}
+```
+
+---
+
+##  Testing Tips
+
+- Use **Postman** or **Insomnia** with an access token.
+- Set the `Authorization` header:  
+  ```
+  Bearer <access_token>
+  ```
+- Decode your JWT at [jwt.io](https://jwt.io/) to inspect roles and claims.
+
+---
+
+##  Deployment
+
+For production, you may:
+
+- Use **Docker** for containerization
+- Connect to **external Keycloak**
+- Enable HTTPS & CORS restrictions
+- Configure for PostgreSQL/MySQL in cloud
+
+---
+
+##  License
+
+This project is licensed under MIT.
+
+---
+
+##  Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit changes
+4. Push to the branch
+5. Create a Pull Request
+
+---
+
+##  Author
+
+- **Your Name** - [Aparajita](https://github.com/kumaparajita104)
