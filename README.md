@@ -21,7 +21,7 @@ This project is a Spring Boot-based REST API backend that supports dynamic form 
 - Spring Boot
 - Spring Security (OAuth2 + Keycloak)
 - JPA (Hibernate)
-- PostgreSQL (or any JPA-compatible DB)
+- MySQL (or any JPA-compatible DB)
 - Jackson (for JSON parsing)
 
 ---
@@ -32,9 +32,9 @@ This project is a Spring Boot-based REST API backend that supports dynamic form 
 
 - Java 17+
 - Maven
-- PostgreSQL or MySQL running
+- MySQL running
 - Keycloak running with realm & client setup (e.g. `user_leave_api`)
-- Frontend (optional but recommended)
+- Frontend 
 
 ### 1. Clone the Repository
 
@@ -175,7 +175,7 @@ Authorization: Bearer <JWT>
 
 ##  Testing Tips
 
-- Use **Postman** or **Insomnia** with an access token.
+- Use **Postman** with an access token.
 - Set the `Authorization` header:  
   ```
   Bearer <access_token>
